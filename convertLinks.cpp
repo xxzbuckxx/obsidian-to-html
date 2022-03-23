@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 	string link;
 	bool insideWiki = false;
 	bool rename = false;
+	bool image = false;
 	while (getline(file_in, line)) {
 		for (int i = 0; i < line.length(); i++) {
 			// Catch open bracket, make opening 1 bracket if double
@@ -57,6 +58,9 @@ int main(int argc, char **argv) {
 
 				if (line[i] == '[') {
 					insideWiki = true;
+					if (i > 1 && line[i-2] == '!') {
+						image = true;
+					}
 				} else {
 					file_out << line[i];
 				}
@@ -65,9 +69,12 @@ int main(int argc, char **argv) {
 				file_out << name;
 				file_out << line[i++];
 				if (line[i] == ']') {
-					file_out << "(./" << link << ".html)";
+					file_out << "(./" << link;
+					if (!image) file_out << ".html";
+					file_out << ")";
 					link = "";
 					name = "";
+					image = false;
 					insideWiki = false;
 				} else {
 					throw std::logic_error("] found inside wiki link without following ]");
@@ -77,12 +84,14 @@ int main(int argc, char **argv) {
 				if (insideWiki) {
 					if (line[i] == ' ') {
 						link += "-";
-						name += "-";
-					} else if (line[i] == '|') {
-						name = "";
 					} else {
 						link += line[i];
-						name += line[i];
+					}
+
+					name += line[i];
+
+					if (line[i] == '|') {
+						name = "";
 					}
 				} else {
 					file_out << line[i];

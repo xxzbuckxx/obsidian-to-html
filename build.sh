@@ -20,6 +20,17 @@ SOURCE="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Main"
 
 # Copy all Makrdown files to build
 find "$SOURCE" -type f -name "*.md" > filenames.txt
+find "$SOURCE" -type f -name "*.png" > imagenames.txt
+find "$SOURCE" -type f -name "*.jpg" >> imagenames.txt
+find "$SOURCE" -type f -name "*.gif" >> imagenames.txt
+
+cat imagenames.txt | while read -r LINE
+do
+	FILE=${LINE##*/}
+	HYPHENFILE=$(echo $FILE | tr " " "-")
+	cp "$LINE" "build/$HYPHENFILE"
+done
+
 cat filenames.txt | while read -r LINE
 do
 	FILE=${LINE##*/}
@@ -28,3 +39,4 @@ do
 	./convertLinks "$LINE" "src/$HYPHENNAME.md"
 	pandoc -s -f commonmark -t html -o "build/$HYPHENNAME.html" "src/$HYPHENNAME.md" --quiet
 done
+

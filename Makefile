@@ -23,5 +23,5 @@ build: convertLinks
 	./build.sh
 
 clean :
-	rm -r src filenames.txt convertLinks
+	rm -r src imagenames.txt filenames.txt convertLinks
 
