@@ -88,24 +88,29 @@ int main(int argc, char **argv) {
 				name = "";
 				image = false;
 				insideWiki = false;
+				rename = false;
 				continue;
 			}
 
 			// Generate link and name (inside [[]])
 			if (insideWiki) {
-				// Insert - instead of space in links
-				if (line[i] == ' ') {
-					link += "-";
-				} else {
-					link += line[i];
-				}
-
-				name += line[i];
-
 				// Make Name string after |
 				if (line[i] == '|') {
 					name = "";
+					rename = true;
+					continue;
 				}
+
+				// Insert - instead of space in links
+				if (!rename) {
+					if (line[i] == ' ') {
+						link += "-";
+					} else {
+						link += line[i];
+					}
+				}
+
+				name += line[i];
 				continue;
 			}
 
