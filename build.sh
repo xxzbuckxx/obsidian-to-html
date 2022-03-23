@@ -18,12 +18,13 @@ SOURCE="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Main"
 [ ! -d "build" ] && mkdir build
 [ ! -d "src" ] && mkdir src
 
-# Copy all Makrdown files to build
+# Generate list of file paths and list of image paths
 find "$SOURCE" -type f -name "*.md" > filenames.txt
 find "$SOURCE" -type f -name "*.png" > imagenames.txt
 find "$SOURCE" -type f -name "*.jpg" >> imagenames.txt
 find "$SOURCE" -type f -name "*.gif" >> imagenames.txt
 
+# Copy images to build
 cat imagenames.txt | while read -r LINE
 do
 	FILE=${LINE##*/}
@@ -31,12 +32,17 @@ do
 	cp "$LINE" "build/$HYPHENFILE"
 done
 
+# Fix links and convert to HTML 
 cat filenames.txt | while read -r LINE
 do
 	FILE=${LINE##*/}
 	NAME=${FILE%.*}
 	HYPHENNAME=$(echo $NAME | tr " " "-")
+
+	# Convert WikiLink to CommonMark Link
 	./convertLinks "$LINE" "src/$HYPHENNAME.md"
+
+	# Generate html page from markdown page
 	pandoc -s -f commonmark -t html -o "build/$HYPHENNAME.html" "src/$HYPHENNAME.md" --quiet
 done
 

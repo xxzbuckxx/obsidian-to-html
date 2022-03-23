@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	ifstream file_in;
 	ofstream file_out;
 
-	// Parse program argument ---------------
+	// Open files ----------------------
 	if (argc != 3) {
 		cerr << "Error: specify an input and an ouput file\n";
 		return 1;
@@ -40,69 +40,82 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	// Parse files ----------------------
 	string line;
-	string name;
-	string link;
-	bool insideWiki = false;
-	bool rename = false;
-	bool image = false;
+	string name; // Shown Hypertext
+	string link; // valid link
+	bool insideWiki = false; // inside [[ ]]
+	bool rename = false;	 // renaming with |
+	bool image = false;		 // Link is image (starts with !)
 	while (getline(file_in, line)) {
 		for (int i = 0; i < line.length(); i++) {
-			// Catch open bracket, make opening 1 bracket if double
+
+			// Change [[ --> [
 			if (line[i] == '[') {
-				if (insideWiki == false) {
-					file_out << line[i++];
-				} else {
+				if (insideWiki) {
 					throw std::logic_error("[ found inside wiki link");
 				}
 
-				if (line[i] == '[') {
-					insideWiki = true;
-					if (i > 1 && line[i-2] == '!') {
-						image = true;
-					}
-				} else {
+				// Check for second [
+				file_out << line[i++];
+				if (line[i] != '[') { // not a WikiLink
 					file_out << line[i];
+					continue;
 				}
-				// Catch closed bracket, make closing bracket and link
-			} else if (line[i] == ']' && insideWiki) {
+
+				insideWiki = true;
+
+				// Check if image
+				if (i > 1 && line[i-2] == '!') image = true;
+				continue;
+			} 
+			// Change ]] --> ](link)
+			else if (line[i] == ']' && insideWiki) {
+
 				file_out << name;
 				file_out << line[i++];
-				if (line[i] == ']') {
-					file_out << "(./" << link;
-					if (!image) file_out << ".html";
-					file_out << ")";
-					link = "";
-					name = "";
-					image = false;
-					insideWiki = false;
-				} else {
+
+				if (line[i] != ']') {
 					throw std::logic_error("] found inside wiki link without following ]");
 				}
-				// Keep normal character unchanged
-			} else {
-				if (insideWiki) {
-					if (line[i] == ' ') {
-						link += "-";
-					} else {
-						link += line[i];
-					}
 
-					name += line[i];
+				file_out << "(./" << link;
+				if (!image) file_out << ".html"; // for page links
+				file_out << ")";
 
-					if (line[i] == '|') {
-						name = "";
-					}
-				} else {
-					file_out << line[i];
-				}
+				// Reset
+				link = "";
+				name = "";
+				image = false;
+				insideWiki = false;
+				continue;
 			}
+
+			// Generate link and name (inside [[]])
+			if (insideWiki) {
+				// Insert - instead of space in links
+				if (line[i] == ' ') {
+					link += "-";
+				} else {
+					link += line[i];
+				}
+
+				name += line[i];
+
+				// Make Name string after |
+				if (line[i] == '|') {
+					name = "";
+				}
+				continue;
+			}
+
+			// Default
+			file_out << line[i];
 		}
 		file_out << "\n";
 	}
 
 	file_in.close();
 	file_out.close();
-
 	return 0;
 }
