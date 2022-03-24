@@ -32,12 +32,18 @@ do
 	cp "$LINE" "build/$HYPHENFILE"
 done
 
+
 # Fix links and convert to HTML 
+echo "# PAGES" > src/index.md
+
 cat filenames.txt | while read -r LINE
 do
 	FILE=${LINE##*/}
 	NAME=${FILE%.*}
 	HYPHENNAME=$(echo $NAME | tr " " "-")
+
+	# Add Link to Index
+	echo "[$NAME]($HYPHENNAME.html)		" >> src/index.md
 
 	# Convert WikiLink to CommonMark Link
 	./convertLinks "$LINE" "src/$HYPHENNAME.md"
@@ -46,3 +52,4 @@ do
 	pandoc -s -f commonmark -t html -o "build/$HYPHENNAME.html" "src/$HYPHENNAME.md" --quiet
 done
 
+pandoc -s -f commonmark -t html -o "build/index.html" "src/index.md" --quiet
